@@ -40,8 +40,17 @@ const Storage = {
 
     set(transactions) {
         localStorage.setItem("dev.finances:transactions", JSON.stringify(transactions))
+        let data = JSON.parse(localStorage.getItem("dev.finances:transactions"));
+        db.collection("lancamentos").add(Object.assign({}, data))
+            .then(function (docRef) {
+                console.log("Document written with ID: ", docRef.id);
+            })
+            .catch(function (error) {
+                console.error("Error adding document: ", error);
+            });
     }
 }
+
 
 const Transaction = {
     all: Storage.get(),
