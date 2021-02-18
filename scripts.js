@@ -39,25 +39,26 @@ const Storage = {
     },
 
     set(transactions) {
-        localStorage.setItem("dev.finances:transactions", JSON.stringify(transactions))
-        let data = JSON.parse(localStorage.getItem("dev.finances:transactions"));
-        db.collection("lancamentos").add(Object.assign({}, data))
-            .then(function (docRef) {
-                console.log("Document written with ID: ", docRef.id);
-            })
-            .catch(function (error) {
-                console.error("Error adding document: ", error);
-            });
+        localStorage.setItem("dev.finances:transactions", JSON.stringify(transactions));
+
     }
 }
 
-
+//TODO: Implementar CRUD Firestore
 const Transaction = {
     all: Storage.get(),
 
     add(transaction) {
         Transaction.all.push(transaction)
 
+        //Persiste objeto no firestore
+        db.collection("lancamentos").add(Object.assign({}, transaction))
+            .then(function (docRef) {
+                console.log("Document written with ID: ", docRef.id);
+            })
+            .catch(function (error) {
+                console.error("Error adding document: ", error);
+            });
         App.reload()
     },
 
@@ -65,6 +66,13 @@ const Transaction = {
         Transaction.all.splice(index, 1)
 
         App.reload()
+    },
+    create() {
+
+    },
+
+    read() {
+
     },
 
     incomes() {
@@ -111,7 +119,6 @@ const DOM = {
         const html = `
         <td class="description">${transaction.description}</td>
         <td class="${CSSclass}">${amount}</td>
-        <td class="date">${transaction.date}</td>
         <td>
             <img onclick="Transaction.remove(${index})" src="./assets/minus.svg" alt="Remover transação">
         </td>
@@ -166,46 +173,51 @@ const Utils = {
 }
 
 const Form = {
-    description: document.querySelector('input#description'),
-    amount: document.querySelector('input#amount'),
-    date: document.querySelector('input#date'),
+
+    transactionRef: {
+        description: document.querySelector('input#description'),
+        amount: document.querySelector('input#amount'),
+        date: null,
+    },
+
+    create() {
+
+    },
 
     getValues() {
         return {
-            description: Form.description.value,
-            amount: Form.amount.value,
-            date: Form.date.value
+            description: Form.transactionRef.description.value,
+            amount: Form.transactionRef.amount.value,
+            date: Date()
         }
     },
 
     validateFields() {
-        const { description, amount, date } = Form.getValues()
+        const { description, amount } = Form.getValues()
 
         if (description.trim() === "" ||
-            amount.trim() === "" ||
-            date.trim() === "") {
+            amount.trim() === "") {
             throw new Error("Por favor, preencha todos os campos")
         }
     },
 
     formatValues() {
-        let { description, amount, date } = Form.getValues()
+        let { description, amount } = Form.getValues()
 
         amount = Utils.formatAmount(amount)
 
-        date = Utils.formatDate(date)
+        // date = Utils.formatDate(date)
 
         return {
             description,
-            amount,
-            date
+            amount
         }
     },
 
     clearFields() {
-        Form.description.value = ""
-        Form.amount.value = ""
-        Form.date.value = ""
+        Form.transactionRef.description.value = ""
+        Form.transactionRef.amount.value = ""
+        // Form.date.value = "" // Implementada gravação automática de data
     },
 
     submit(event) {
@@ -214,7 +226,8 @@ const Form = {
         try {
             Form.validateFields()
             const transaction = Form.formatValues()
-            Transaction.add(transaction)
+            console.log(transaction);
+            Transaction.add(transaction);
             Form.clearFields()
             Modal.close()
         } catch (error) {
