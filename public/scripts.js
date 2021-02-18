@@ -1,5 +1,5 @@
 const Modal = {
-    open(){
+    open() {
         // Abrir modal
         // Adicionar a class active ao modal
         document
@@ -8,7 +8,7 @@ const Modal = {
             .add('active')
 
     },
-    close(){
+    close() {
         // fechar o modal
         // remover a class active do modal
         document
@@ -31,7 +31,7 @@ const Storage = {
 const Transaction = {
     all: Storage.get(),
 
-    add(transaction){
+    add(transaction) {
         Transaction.all.push(transaction)
 
         App.reload()
@@ -46,7 +46,7 @@ const Transaction = {
     incomes() {
         let income = 0;
         Transaction.all.forEach(transaction => {
-            if( transaction.amount > 0 ) {
+            if (transaction.amount > 0) {
                 income += transaction.amount;
             }
         })
@@ -56,7 +56,7 @@ const Transaction = {
     expenses() {
         let expense = 0;
         Transaction.all.forEach(transaction => {
-            if( transaction.amount < 0 ) {
+            if (transaction.amount < 0) {
                 expense += transaction.amount;
             }
         })
@@ -114,9 +114,9 @@ const DOM = {
 }
 
 const Utils = {
-    formatAmount(value){
+    formatAmount(value) {
         value = Number(value.replace(/\,\./g, "")) * 100
-        
+
         return value
     },
 
@@ -137,7 +137,7 @@ const Utils = {
             currency: "BRL"
         })
 
-       return signal + value
+        return signal + value
     }
 }
 
@@ -156,17 +156,17 @@ const Form = {
 
     validateFields() {
         const { description, amount, date } = Form.getValues()
-        
-        if( description.trim() === "" || 
-            amount.trim() === "" || 
-            date.trim() === "" ) {
-                throw new Error("Por favor, preencha todos os campos")
+
+        if (description.trim() === "" ||
+            amount.trim() === "" ||
+            date.trim() === "") {
+            throw new Error("Por favor, preencha todos os campos")
         }
     },
 
     formatValues() {
         let { description, amount, date } = Form.getValues()
-        
+
         amount = Utils.formatAmount(amount)
 
         date = Utils.formatDate(date)
@@ -199,13 +199,50 @@ const Form = {
     }
 }
 
+const Firestore = {
+
+}
+
 const App = {
     init() {
         Transaction.all.forEach(DOM.addTransaction)
-        
+
         DOM.updateBalance()
 
         Storage.set(Transaction.all)
+
+        // Your web app's Firebase configuration
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+        var firebaseConfig = {
+            apiKey: "AIzaSyDLIQaxvJzFkQprpSzK50dLyj3PTWKoHT8",
+            authDomain: "projeto-finance.firebaseapp.com",
+            projectId: "projeto-finance",
+            storageBucket: "projeto-finance.appspot.com",
+            messagingSenderId: "739464442513",
+            appId: "1:739464442513:web:004e717889899157668530",
+            measurementId: "G-CNDYQXKBXZ"
+        };
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        var db = firebase.firestore();
+        firebase.analytics();
+        console.log('oiiii');
+        function addData() {
+
+            db.collection("lancamentos").add({
+                first: "Ada",
+                last: "Lovelace",
+                born: 1815
+            })
+                .then(function (docRef) {
+                    console.log("Document written with ID: ", docRef.id);
+                })
+                .catch(function (error) {
+                    console.error("Error adding document: ", error);
+                });
+        };
+
+        addData();
     },
     reload() {
         DOM.clearTransactions()
