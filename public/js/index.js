@@ -15,9 +15,9 @@ firebase.initializeApp(firebaseConfig);
 var db = firebase.firestore();
 firebase.analytics();
 
+console.log(db);
+
 function addData() {
-    console.log(document
-        .getElementById('new').click());
     db.collection("lancamentos").add({
         first: "Ada",
         last: "Lovelace",
@@ -30,3 +30,5 @@ function addData() {
             console.error("Error adding document: ", error);
         });
 };
+
+addData();
