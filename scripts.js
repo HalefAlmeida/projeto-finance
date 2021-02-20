@@ -120,6 +120,7 @@ const Storage = {
     setWithFirebase(collection) {
         localStorage.setItem("dev.finances:transactions", JSON.stringify(Firebase.read(collection)));
         Transaction.all.forEach(DOM.addTransaction)
+        Transaction.all.push(transaction); // Inclui item no armazenamento local
     }
 }
 
@@ -128,7 +129,7 @@ const Transaction = {
     all: Storage.getWithFirebase('lancamentos'),
 
     add(transaction) {
-        Transaction.all.push(transaction); // Inclui item no armazenamento local
+
 
         App.reload()
     },
@@ -298,7 +299,7 @@ const Form = {
         try {
             Form.validateFields()
             const transaction = Form.formatValues()
-            // Transaction.add(transaction);
+            Transaction.add(transaction);
             Firebase.create(transaction)
             Form.clearFields()
             Modal.close()
