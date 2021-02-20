@@ -116,6 +116,7 @@ const Storage = {
         localStorage.setItem("dev.finances:transactions", JSON.stringify(transactions));
     },
 
+
     setWithFirebase(collection) {
         localStorage.setItem("dev.finances:transactions", JSON.stringify(Firebase.read(collection)));
         Transaction.all.forEach(DOM.addTransaction)
@@ -317,6 +318,7 @@ const Form = {
 
         },
         reload() {
+            //TODO: PROBLEMA - Aplicação não atualiza automaticamente registros do firestore ao inicializar. Remover armazenamento local;
             DOM.clearTransactions()
             App.init()
         },
