@@ -33,46 +33,115 @@ const Modal = {
     }
 }
 
+const Firebase = {
+    /**
+     * 
+     * @param {*} transaction Transação a ser persistida no Firestore
+     */
+    create(transaction) {
+        let documentRef = db.collection("lancamentos").doc();
+
+        transaction = Object.assign({ id: documentRef.id }, transaction)
+
+        //Persiste objeto no firestore
+        documentRef.set(transaction)
+            .then(function (docRef) {
+                console.log("Document written!");
+            })
+            .catch(function (error) {
+                console.error("Error adding document: ", error);
+            });
+
+        Transaction.add(documentRef)
+    },
+
+    /**
+     * 
+     * @param {*} collection Coleção firestore de onde os documentos serão recuperados
+     */
+    read(collection) {
+        let query = [];
+
+        db.collection(collection).get().then(function (querySnapshot) {
+            querySnapshot.forEach(function (doc) {
+                // doc.data() is never undefined for query doc snapshots
+                query.push(doc.data())
+            });
+        });
+
+        return query
+    },
+
+    /**
+     * 
+     * @param {*} collection Coleção firestore em que o documento será buscado por id
+     * @param {*} id Identificador do registro a ser recuperado 
+     */
+    readById(collection, id) {
+        let dbRef = db.collection(collection).get(id);
+        dbRef.get().then(function (doc) {
+            if (doc.exists) {
+                return 'oii'
+            } else {
+                return 'hmmm'
+            }
+        }).catch(function (error) {
+            console.log("Erro recuperando documentos: " + error);
+        })
+    },
+
+    update(transaction) {
+
+    },
+
+    delete(collection, transaction) {
+        db.collection(collection).doc(transaction.id).delete().then(function () {
+            console.log("Document successfully deleted!");
+        }).catch(function (error) {
+            console.error("Error removing document: ", error);
+        });
+    }
+}
+
 const Storage = {
     get() {
         return JSON.parse(localStorage.getItem("dev.finances:transactions")) || []
     },
 
+    getWithFirebase(collection) {
+        return Firebase.read(collection)
+    },
+
     set(transactions) {
         localStorage.setItem("dev.finances:transactions", JSON.stringify(transactions));
+    },
 
+    setWithFirebase(collection) {
+        localStorage.setItem("dev.finances:transactions", JSON.stringify(Firebase.read(collection)));
+        Transaction.all.forEach(DOM.addTransaction)
     }
 }
 
 //TODO: Implementar CRUD Firestore
 const Transaction = {
-    all: Storage.get(),
+    all: Storage.getWithFirebase('lancamentos'),
 
     add(transaction) {
-        Transaction.all.push(transaction)
+        Transaction.all.push(transaction); // Inclui item no armazenamento local
 
-        //Persiste objeto no firestore
-        db.collection("lancamentos").add(Object.assign({}, transaction))
-            .then(function (docRef) {
-                console.log("Document written with ID: ", docRef.id);
-            })
-            .catch(function (error) {
-                console.error("Error adding document: ", error);
-            });
         App.reload()
     },
 
     remove(index) {
-        Transaction.all.splice(index, 1)
+
+        Transaction.all.forEach(transaction => {
+            if (Transaction.all[index].id == transaction.id) {
+                Firebase.delete('lancamentos', transaction)
+            }
+        })
+        Transaction.all.splice(index, 1) // Remove item do armazenamento local
 
         App.reload()
-    },
-    create() {
-
-    },
-
-    read() {
-
     },
 
     incomes() {
@@ -112,9 +181,11 @@ const DOM = {
     },
 
     innerHTMLTransaction(transaction, index) {
+
         const CSSclass = transaction.amount > 0 ? "income" : "expense"
 
         const amount = Utils.formatCurrency(transaction.amount)
+
 
         const html = `
         <td class="description">${transaction.description}</td>
@@ -226,8 +297,8 @@ const Form = {
         try {
             Form.validateFields()
             const transaction = Form.formatValues()
-            console.log(transaction);
-            Transaction.add(transaction);
+            // Transaction.add(transaction);
+            Firebase.create(transaction)
             Form.clearFields()
             Modal.close()
         } catch (error) {
@@ -237,11 +308,12 @@ const Form = {
 },
     App = {
         init() {
-            Transaction.all.forEach(DOM.addTransaction)
+
+            Storage.setWithFirebase('lancamentos')
 
             DOM.updateBalance()
 
-            Storage.set(Transaction.all)
+
 
         },
         reload() {
