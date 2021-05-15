@@ -23,7 +23,6 @@ const Storage = {
   },
 }
 
-//TODO: Implementar CRUD Firestore
 const Transaction = {
   all: Storage.get(),
 
@@ -201,7 +200,6 @@ const Form = {
       Storage.set(Transaction.all)
     },
     reload() {
-      //TODO: PROBLEMA - Aplicação não atualiza automaticamente registros do firestore ao inicializar. Remover armazenamento local;
       DOM.clearTransactions()
       App.init()
     },
