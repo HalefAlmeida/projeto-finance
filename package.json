@@ -4,6 +4,8 @@
   "description": "Aplicação WEB que permite o registro de lançamentos financeiros para controle",
   "main": "index.js",
   "scripts": {
+    "start": "nodemon",
+    "dev": "nodemon",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
